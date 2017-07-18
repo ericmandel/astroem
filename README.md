@@ -22,8 +22,11 @@ For an example of the use of these particular libraries, see the
 [Makefile](https://github.com/ericmandel/js9/blob/master/astroem/Makefile)
 in the astroem sub-directory of https://github.com/ericmandel/js9.
 
-
-Note that the libraries are compiled using the -O3 level of optimization.
+The libraries are compiled using the -O3 level of optimization (see
+the EMFLAGS variable in the top-level Makefile).  Emscripten wants you
+to use the same optimization flags throughout the project, so if you
+use a different level of optimization, you probably want to change the
+EMFLAGS variable and rebuild the libraries by executing *make*.
 
 astroem is distributed under the terms of The MIT License.
 
