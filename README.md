@@ -1,5 +1,5 @@
-astroem: astronomical libraries compiled to emscripten byte-code
-----------------------------------------------------------------
+astroem: libraries used in astrophysics, compiled to emscripten byte-code
+-------------------------------------------------------------------------
 
 The libraries in this repository have been compiled to byte-code using
 emscripten. The byte-code files have .a extensions and are stored in the
