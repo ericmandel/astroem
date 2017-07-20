@@ -6,10 +6,13 @@ emscripten. The byte-code files have .a extensions and are stored in the
 lib subdirectory. Include files have been copied to the include subdirectory.
 
 Current libraries:
+
   - cfitsio (https://heasarc.gsfc.nasa.gov/fitsio/fitsio.html)
   - wcs (http://tdc-www.harvard.edu/wcstools)
   - zlib (https://zlib.net/)
   - bzip2 (http://www.bzip.org/)
+
+Current emcc compiler: 1.37.9
 
 An emscripten-enabled project such as JS9 can copy the contents of the
 lib and include sub-directories into their own work space and then
