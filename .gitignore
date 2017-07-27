@@ -7,4 +7,5 @@
 *-sav
 foo*
 goo*
+a.out.dSYM/
 .DS_Store
