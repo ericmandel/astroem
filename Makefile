@@ -20,6 +20,9 @@ ZLIB 		= ./zlib
 
 BZIP2 		= ./bzip2
 
+guard:		FORCE
+		@(echo "use 'make all' to build all libraries")
+
 # build all libraries
 all:		cfitsio wcs zlib bzip2
 
@@ -54,7 +57,7 @@ bzip2:		FORCE
 clean:		FORCE
 		@(rm -rf *.o *~ a.out* foo* *.map \#*         \
 		astroem*.js astroem*.mem astroem.bc;          \
-		(cd $(CFITSIO) && rm -rf a.out* && test -r Makefile && make clean distclean 2>&1 >/dev/null;); \
+		(cd $(CFITSIO) && rm -rf config.log a.out* && test -r Makefile && make clean distclean 2>&1 >/dev/null;); \
 		(cd $(WCS) && make clean 2>&1 >/dev/null;);   \
 		(cd $(ZLIB) && rm -rf *.js && make distclean 2>&1 >/dev/null;); \
 		(cd $(BZIP2) && make clean 2>&1 >/dev/null;); \
