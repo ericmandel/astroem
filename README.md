@@ -12,7 +12,7 @@ Current libraries:
   - zlib (https://zlib.net/)
   - bzip2 (http://www.bzip.org/)
 
-Current emcc compiler: 1.37.9
+Current emcc compiler: 1.37.18
 
 An emscripten-enabled project such as JS9 can copy the contents of the
 lib and include sub-directories into their own work space and then
