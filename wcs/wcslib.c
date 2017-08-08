@@ -568,6 +568,7 @@ double pixcrd[];
    int    err, j;
    double offset;
 
+
    /* Initialize if required. */
    if (wcs->flag != WCSSET) {
       if (wcsset(lin->naxis, ctype, wcs)) return 1;

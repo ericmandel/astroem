@@ -331,11 +331,11 @@ char    *filename;      /* Name of file to check */
     else if (stat (filename, &statbuff))
         return (0);
     else {
-        if (S_ISDIR(statbuff.st_mode) & S_IFDIR)
+        if (S_ISDIR(statbuff.st_mode) && S_IFDIR)
 	    return (2);
 	else
 	    return (1);
-    }
+	}
 }
 
 

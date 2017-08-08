@@ -1286,7 +1286,7 @@ const char *in;	/* Character string of sexigesimal or decimal degrees */
 
 {
     double dec;		/* Declination in degrees (returned) */
-    double deg, min=0, sec, sign;
+    double deg, min, sec, sign;
     char *value, *c1, *c2;
     int lval;
     char *dchar;
