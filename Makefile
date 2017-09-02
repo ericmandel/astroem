@@ -29,7 +29,7 @@ all:		cfitsio wcs zlib bzip2
 cfitsio:	FORCE
 		@(CDIR=`pwd`; cd $(CFITSIO);       \
 		emconfigure ./configure;           \
-		emmake make ZLIB_SOURCES="" CFLAGS="$(CFITSIO_CFLAGS)" \
+		emmake make ZLIB_SOURCES="zlib/zcompress.c zlib/zuncompress.c" CFLAGS="$(CFITSIO_CFLAGS)" \
 		clean all-nofitsio ;               \
 		cp -p libcfitsio.a $${CDIR}/lib;   \
 	        cp -p *.h $${CDIR}/include;)
