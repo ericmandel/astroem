@@ -20,17 +20,21 @@ ZLIB 		= ./zlib
 
 BZIP2 		= ./bzip2
 
+REGIONS		= ./regions
+
+UTIL		= ./util
+
 guard:		FORCE
 		@(echo "use 'make all' to build all libraries")
 
 # build all libraries
-all:		cfitsio wcs zlib bzip2
+all:		cfitsio wcs zlib bzip2 util
 
 cfitsio:	FORCE
 		@(CDIR=`pwd`; cd $(CFITSIO);       \
-		emconfigure ./configure;           \
-		emmake make ZLIB_SOURCES="zlib/zcompress.c zlib/zuncompress.c" CFLAGS="$(CFITSIO_CFLAGS)" \
-		clean all-nofitsio ;               \
+		FC=none emconfigure ./configure;   \
+		sed 's/ \-DCFITSIO_HAVE_CURL=1//;s/ \-DHAVE_NET_SERVICES=1//' < Makefile > nMakefile && mv nMakefile Makefile; \
+		emmake make ZLIB_SOURCES="zlib/zcompress.c zlib/zuncompress.c" CFLAGS="$(CFITSIO_CFLAGS)" clean all-nofitsio;      \
 		cp -p libcfitsio.a $${CDIR}/lib;   \
 	        cp -p *.h $${CDIR}/include;)
 
@@ -47,6 +51,19 @@ zlib:		FORCE
 		cp -p libz.a $${CDIR}/lib;         \
 	        cp -p *.h $${CDIR}/include;)
 
+regions:	FORCE
+		@(CDIR=`pwd`; cd $(REGIONS);                     \
+		emconfigure ./configure --with-cfitsio=$${CDIR}; \
+		emmake make clean emlib;                         \
+		cp -p libregions.a $${CDIR}/lib;                 \
+	        cp -p regions*.h util/*.h $${CDIR}/include;)
+
+util:		FORCE
+		@(CDIR=`pwd`; cd $(UTIL);                        \
+		emconfigure ./configure;                         \
+		emmake make clean all;                           \
+		cp -p libutil.a $${CDIR}/lib;                    \
+	        cp -p *.h $${CDIR}/include;)
 
 bzip2:		FORCE
 		@(CDIR=`pwd`; cd $(BZIP2);         \
@@ -59,6 +76,8 @@ clean:		FORCE
 		astroem*.js astroem*.mem astroem.bc;          \
 		(cd $(CFITSIO) && rm -rf config.log a.out* && test -r Makefile && make clean distclean 2>&1 >/dev/null;); \
 		(cd $(WCS) && make clean 2>&1 >/dev/null;);   \
+		(cd $(REGIONS) && make clean 2>&1 >/dev/null;);   \
+		(cd $(UTIL) && make clean 2>&1 >/dev/null;);   \
 		(cd $(ZLIB) && rm -rf *.js && make distclean 2>&1 >/dev/null;); \
 		(cd $(BZIP2) && make clean 2>&1 >/dev/null;); \
 		)
