@@ -35,6 +35,6 @@ xalloc.o:	xalloc.c
 		$(CC) -c $(CC_SW) -o $@ $?
 
 clean:		FORCE
-		rm -rf *.o *.a *~ a.out*
+		rm -rf *.o *.a *~ a.out* config.log config.status Makefile
 
 FORCE:
