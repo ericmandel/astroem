@@ -8,7 +8,7 @@ INCS =		-I.
 
 CC_SW =		 ${CFLAGS} ${AC_FLAGS} ${INCS}
 
-OBJS =		file.o find.o macro.o word.o swap.o xalloc.o
+OBJS =		file.o find.o macro.o strtod.o swap.o word.o xalloc.o xerror.o
 
 all:		libutil.a
 
@@ -25,6 +25,9 @@ find.o:		find.c
 macro.o:	macro.c
 		$(CC) -c $(CC_SW) -o $@ $?
 
+strtod.o:	strtod.c
+		$(CC) -c $(CC_SW) -o $@ $?
+
 swap.o:		swap.c
 		$(CC) -c $(CC_SW) -o $@ $?
 
@@ -32,6 +35,9 @@ word.o:		word.c
 		$(CC) -c $(CC_SW) -o $@ $?
 
 xalloc.o:	xalloc.c
+		$(CC) -c $(CC_SW) -o $@ $?
+
+xerror.o:	xerror.c
 		$(CC) -c $(CC_SW) -o $@ $?
 
 clean:		FORCE
