@@ -11,16 +11,24 @@ EMFLAGS		= -O3
 EM_CFLAGS	= CC=$(EMCC) CFLAGS=$(EMFLAGS) ARCHIVE=emar RANLIB=emranlib AR=emar ARFLAGS=cruv
 
 # libraries that we build, along with configuration params as needed:
+BZIP2 		= ./bzip2
+
 CFITSIO 	= ./cfitsio
 CFITSIO_CFLAGS	= $(EMFLAGS) -fno-common -D__x86_64__
+
+EM 		= ./em
+
+REGIONS		= ./regions
+REGIONS_CFLAGS	= $(EMFLAGS)  -I./util -I./wcs -I../astroem/include  -D'exit(n)=em_exit(n)'
+REGINCL		= regions.h regionsP.h \
+		imfilter_c.h imregions_c.h imregions.h imregions_h.h
+
+UTIL		= ./util
+UTIL_CFLAGS	= $(EMFLAGS) -D'exit(n)=em_exit(n)'
 
 WCS 		= ./wcs
 
 ZLIB 		= ./zlib
-
-BZIP2 		= ./bzip2
-
-UTIL		= ./util
 
 guard:		FORCE
 		@(echo "use 'make all' to build all libraries")
@@ -37,16 +45,29 @@ bzip2:		FORCE
 cfitsio:	FORCE
 		@(CDIR=`pwd`; cd $(CFITSIO);       \
 		FC=none emconfigure ./configure;   \
-		sed 's/ \-DCFITSIO_HAVE_CURL=1//;s/ \-DHAVE_NET_SERVICES=1//' < Makefile > nMakefile && mv nMakefile Makefile; \
+		sed 's/ \-DCFITSIO_HAVE_CURL=1//;s/ \-DHAVE_NET_SERVICES=1//' < Makefile > nMakefile && mv nMakefile Makefile;     \
 		emmake make ZLIB_SOURCES="zlib/zcompress.c zlib/zuncompress.c" CFLAGS="$(CFITSIO_CFLAGS)" clean all-nofitsio;      \
 		cp -p libcfitsio.a $${CDIR}/lib;   \
 	        cp -p *.h $${CDIR}/include;)
 
+em:		FORCE
+		@(CDIR=`pwd`; cd $(EM);            \
+		emmake make $(EM_CFLAGS) libem.a;  \
+		cp -p libem.a $${CDIR}/lib;        \
+	        cp -p *.h $${CDIR}/include;)
+
+regions:	FORCE
+		@(CDIR=`pwd`; cd $(REGIONS);        \
+		emconfigure ./configure --with-cfitsio=../astroem; \
+		emmake make clean CFLAGS="$(REGIONS_CFLAGS)" emlib; \
+		cp -p libregions.a $${CDIR}/lib;    \
+	        cp -p $(REGINCL) $${CDIR}/include;)
+
 util:		FORCE
-		@(CDIR=`pwd`; cd $(UTIL);                        \
-		emconfigure ./configure;                         \
-		emmake make clean all;                           \
-		cp -p libutil.a $${CDIR}/lib;                    \
+		@(CDIR=`pwd`; cd $(UTIL);          \
+		emconfigure ./configure;           \
+		emmake make clean CFLAGS="$(UTIL_CFLAGS)" all;             \
+		cp -p libutil.a $${CDIR}/lib;      \
 	        cp -p *.h $${CDIR}/include;)
 
 wcs:		FORCE
@@ -66,6 +87,7 @@ clean:		FORCE
 		@(rm -rf *.o *~ a.out* foo* *.map \#*         \
 		astroem*.js astroem*.mem astroem.bc;          \
 		(cd $(BZIP2) && make clean 2>&1 >/dev/null;); \
+		(cd $(EM) && make clean 2>&1 >/dev/null;);   \
 		(cd $(CFITSIO) && rm -rf config.log a.out* && test -r Makefile && make clean distclean 2>&1 >/dev/null;); \
 		(cd $(UTIL) && make clean 2>&1 >/dev/null;);   \
 		(cd $(WCS) && make clean 2>&1 >/dev/null;);   \
