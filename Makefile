@@ -19,7 +19,7 @@ CFITSIO_CFLAGS	= $(EMFLAGS) -fno-common -D__x86_64__
 EM 		= ./em
 
 REGIONS		= ./regions
-REGIONS_CFLAGS	= $(EMFLAGS)  -I./util -I./wcs -I../astroem/include  -D'exit(n)=em_exit(n)'
+REGIONS_CFLAGS	= $(EMFLAGS) -I./util -I../include  -D'exit(n)=em_exit(n)'
 REGINCL		= regions.h regionsP.h \
 		imfilter_c.h imregions_c.h imregions.h imregions_h.h
 
@@ -58,7 +58,7 @@ em:		FORCE
 
 regions:	FORCE
 		@(CDIR=`pwd`; cd $(REGIONS);        \
-		emconfigure ./configure --with-cfitsio=../astroem; \
+		emconfigure ./configure --with-cfitsio=..; \
 		emmake make clean CFLAGS="$(REGIONS_CFLAGS)" emlib; \
 		cp -p libregions.a $${CDIR}/lib;    \
 	        cp -p $(REGINCL) $${CDIR}/include;)

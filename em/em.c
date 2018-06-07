@@ -7,7 +7,7 @@
 
    The basic pattern is:
 
-   if( !em_enter() ){
+   if( !EM_ENTER ){
      _regcnts(i, args);
    }
 
@@ -17,11 +17,7 @@
 
 #include <setjmp.h>
 
-static jmp_buf em_jmpbuf;
-
-int em_enter(){
-  return setjmp(em_jmpbuf);
-}
+jmp_buf em_jmpbuf;
 
 void em_exit(int n){
   // don't return with a 0, it will cause recursion! */

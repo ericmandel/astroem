@@ -11,7 +11,10 @@
 #ifndef	__em_h
 #define	__em_h
 
-int em_enter();
+#define EM_SETJMP setjmp(em_jmpbuf)
+
+extern jmp_buf em_jmpbuf;
+
 void em_exit(int n);
 
 #endif
