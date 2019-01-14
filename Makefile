@@ -34,7 +34,7 @@ guard:		FORCE
 		@(echo "use 'make all' to build all libraries")
 
 # build all libraries
-all:		bzip2 cfitsio util wcs zlib
+all:		bzip2 cfitsio util wcs zlib em regions
 
 bzip2:		FORCE
 		@(CDIR=`pwd`; cd $(BZIP2);         \
