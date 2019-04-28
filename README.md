@@ -11,8 +11,9 @@ Current libraries:
   - wcs (http://tdc-www.harvard.edu/wcstools)
   - zlib (https://zlib.net/)
   - bzip2 (http://www.bzip.org/)
+  - regions (https://github.com/ericmandel/regions)
 
-Current emcc compiler: 1.37.20
+Current emcc compiler: 1.38.28
 
 An emscripten-enabled project such as JS9 can copy the contents of the
 lib and include sub-directories into their own work space and then
