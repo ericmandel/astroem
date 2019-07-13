@@ -52,7 +52,6 @@ static void wcseqm();
 static void wcsioset();
 void wcsrotset();
 char wcschar();
-char *uppercase();
 
 /* set up a WCS structure from a FITS image header lhstring bytes long 
  * for a specified WCS name */
@@ -536,6 +535,14 @@ char *wchar;		/* Suffix character for one of multiple WCS */
 		sprintf (keyword,"PV%d_%d", ilat, i);
 		hgetr8c (hstring, keyword, &mchar, &wcs->prj.p[i]);
 		}
+	    }
+	else if (wcs->prjcode == WCS_HPX) {
+		hgetr8c (hstring, "PV2_1", &mchar, &wcs->prj.p[1]);
+		hgetr8c (hstring, "PV2_2", &mchar, &wcs->prj.p[2]);
+	    }
+
+	else if (wcs->prjcode == WCS_TOA) {
+		hgetr8c (hstring, "PV2_1", &mchar, &wcs->prj.p[1]);
 	    }
 
 	/* Initialize TNX, defaulting to TAN if there is a problem */

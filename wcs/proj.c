@@ -3741,7 +3741,7 @@ double *x, *y;
 
 {
    int   face;
-   double cthe, eta, l, m, n, rho, xi;
+   double cthe, eta=0, l, m, n, rho, xi=0;
    const float tol = 1.0e-7;
 
    float a, a2, a2b2, a4, ab, b, b2, b4, ca2, cb2;
@@ -4864,12 +4864,13 @@ double *x, *y;
 
    int    debug = 0;
 
-   int    i, level, maxlevel, npix;
+   // int    i, level, maxlevel, npix;
+   int    level, maxlevel, npix;
    int    xindex, yindex;
    int    prime, opposite;
    
    double direction[4];
-   double size;
+   // double size;
 
 
    if(debug > 1)
@@ -5207,16 +5208,18 @@ double *phi, *theta;
    Vec    corner  [4];
    Vec    midpoint[4];
 
-   unsigned long index, maxindex, currindex;
+   // unsigned long index, maxindex, currindex;
+   unsigned long maxindex, currindex;
 
    int    debug = 0;
 
-   int    i, npix, level, maxlevel;
+   // int    i, npix, level, maxlevel;
+   int    npix, level, maxlevel;
    int    xindex, yindex;
    int    xsplit, ysplit;
    int    prime, opposite;
 
-   double size;
+   // double size;
 
    if(debug > 1)
       printf("\nTOAREV> X = %9.4f Y = %9.4f\n\n", x, y);

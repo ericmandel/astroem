@@ -374,13 +374,16 @@ char	*ctype2;	/* FITS WCS projection for axis 2 */
     strcpy (ctypes[24], "CSC");
     strcpy (ctypes[25], "QSC");
     strcpy (ctypes[26], "TSC");
-    strcpy (ctypes[27], "NCP");
-    strcpy (ctypes[28], "GLS");
-    strcpy (ctypes[29], "DSS");
-    strcpy (ctypes[30], "PLT");
-    strcpy (ctypes[31], "TNX");
-    strcpy (ctypes[32], "ZPX");
-    strcpy (ctypes[33], "TPV");
+    strcpy (ctypes[27], "HPX");
+    strcpy (ctypes[28], "XPH");
+    strcpy (ctypes[29], "NCP");
+    strcpy (ctypes[30], "GLS");
+    strcpy (ctypes[31], "DSS");
+    strcpy (ctypes[32], "PLT");
+    strcpy (ctypes[33], "TNX");
+    strcpy (ctypes[34], "ZPX");
+    strcpy (ctypes[35], "TPV");
+    strcpy (ctypes[36], "TOA");
 
     /* Initialize distortion types */
     strcpy (dtypes[1], "SIP");
