@@ -85,13 +85,13 @@ zlib:		FORCE
 
 clean:		FORCE
 		@(rm -rf *.o *~ a.out* foo* *.map \#*         \
-		astroem*.js astroem*.mem astroem.bc;          \
+		*/*.wasm astroem*.js astroem*.mem astroem.bc; \
 		(cd $(BZIP2) && make clean 2>&1 >/dev/null;); \
-		(cd $(EM) && make clean 2>&1 >/dev/null;);   \
+		(cd $(EM) && make clean 2>&1 >/dev/null;);    \
 		(cd $(CFITSIO) && rm -rf config.log a.out* && test -r Makefile && make clean distclean 2>&1 >/dev/null;); \
 		(cd $(REGIONS) && make clean 2>&1 >/dev/null;);   \
 		(cd $(UTIL) && make clean 2>&1 >/dev/null;);   \
-		(cd $(WCS) && make clean 2>&1 >/dev/null;);   \
+		(cd $(WCS) && make clean 2>&1 >/dev/null;);    \
 		(cd $(ZLIB) && rm -rf *.js && make distclean 2>&1 >/dev/null;); \
 		)
 
