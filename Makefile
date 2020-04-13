@@ -34,19 +34,13 @@ guard:		FORCE
 		@(echo "use 'make all' to build all libraries")
 
 # build all libraries
-all:		bzip2 cfitsio util wcs zlib em regions
-
-bzip2:		FORCE
-		@(CDIR=`pwd`; cd $(BZIP2);         \
-		emmake make $(EM_CFLAGS) libbz2.a; \
-		cp -p libbz2.a $${CDIR}/lib;       \
-	        cp -p *.h $${CDIR}/include;)
+all:		cfitsio util wcs em regions
 
 cfitsio:	FORCE
 		@(CDIR=`pwd`; cd $(CFITSIO);       \
 		FC=none emconfigure ./configure;   \
 		sed 's/ \-DCFITSIO_HAVE_CURL=1//;s/ \-DHAVE_NET_SERVICES=1//' < Makefile > nMakefile && mv nMakefile Makefile;     \
-		emmake make ZLIB_SOURCES="zlib/zcompress.c zlib/zuncompress.c" CFLAGS="$(CFITSIO_CFLAGS)" clean all-nofitsio;      \
+		emmake make ZLIB_SOURCES="" CFLAGS="$(CFITSIO_CFLAGS)" clean all-nofitsio;      \
 		cp -p libcfitsio.a $${CDIR}/lib;   \
 	        cp -p *.h $${CDIR}/include;)
 
@@ -76,6 +70,12 @@ wcs:		FORCE
 		cp -p libwcs.a $${CDIR}/lib;       \
 	        cp -p *.h $${CDIR}/include;)
 
+bzip2:		FORCE
+		@(CDIR=`pwd`; cd $(BZIP2);         \
+		emmake make $(EM_CFLAGS) libbz2.a; \
+		cp -p libbz2.a $${CDIR}/lib;       \
+	        cp -p *.h $${CDIR}/include;)
+
 zlib:		FORCE
 		@(CDIR=`pwd`; cd $(ZLIB);          \
 		emconfigure ./configure --static;  \
@@ -86,12 +86,12 @@ zlib:		FORCE
 clean:		FORCE
 		@(rm -rf *.o *~ a.out* foo* *.map \#*         \
 		*/*.wasm astroem*.js astroem*.mem astroem.bc; \
-		(cd $(BZIP2) && make clean 2>&1 >/dev/null;); \
 		(cd $(EM) && make clean 2>&1 >/dev/null;);    \
 		(cd $(CFITSIO) && rm -rf config.log a.out* && test -r Makefile && make clean distclean 2>&1 >/dev/null;); \
 		(cd $(REGIONS) && make clean 2>&1 >/dev/null;);   \
 		(cd $(UTIL) && make clean 2>&1 >/dev/null;);   \
 		(cd $(WCS) && make clean 2>&1 >/dev/null;);    \
+		(cd $(BZIP2) && make clean 2>&1 >/dev/null;); \
 		(cd $(ZLIB) && rm -rf *.js && make distclean 2>&1 >/dev/null;); \
 		)
 
