@@ -13,14 +13,14 @@ Current libraries:
   - bzip2 (http://www.bzip.org/)
   - regions (https://github.com/ericmandel/regions)
 
-Current emcc compiler: 1.38.28
+Current emcc compiler: 2.0.16
 
 An emscripten-enabled project such as JS9 can copy the contents of the
 lib and include sub-directories into their own work space and then
 link against the byte-code libraries. For general emscripten build
 instructions, see the documentation at:
 
-https://kripken.github.io/emscripten-site/docs/compiling/Building-Projects.html
+https://emscripten.org/docs/compiling/Building-Projects.html
 
 For an example of the use of these particular libraries, see the
 [Makefile](https://github.com/ericmandel/js9/blob/master/astroem/Makefile)
@@ -34,5 +34,4 @@ EMFLAGS variable and rebuild the libraries by executing *make all*.
 
 astroem is distributed under the terms of The MIT License.
 
-Eric Mandel, Harvard-Smithsonian Center for Astrophysics
-
+Eric Mandel, Center for Astrophysics | Harvard & Smithsonian
