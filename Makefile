@@ -38,7 +38,7 @@ all:		cfitsio util wcs em regions
 
 cfitsio:	FORCE
 		@(CDIR=`pwd`; cd $(CFITSIO);       \
-		FC=none emconfigure ./configure;   \
+		FC=none emconfigure ./configure --disable-curl;   \
 		sed 's/ \-DCFITSIO_HAVE_CURL=1//;s/ \-DHAVE_NET_SERVICES=1//' < Makefile > nMakefile && mv nMakefile Makefile;     \
 		emmake make ZLIB_SOURCES="" CFLAGS="$(CFITSIO_CFLAGS)" clean libcfitsio.a "FITSIO_SRC=";      \
 		cp -p libcfitsio.a $${CDIR}/lib;   \

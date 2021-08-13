@@ -31,7 +31,7 @@
 \medskip
 \medskip
 \begin{center}
-{\Large Version 3.4 \\}
+{\Large Version 4.0 \\}
 \end{center}
 \bigskip
 \vskip 2.5cm
@@ -46,7 +46,7 @@ USA}
 \vfill
 \bigskip
 \begin{center}
-{\Large Mar 2020\\}
+{\Large May 2021\\}
 \end{center}
 \vfill
 \end{titlepage}
@@ -1110,7 +1110,7 @@ with TFORMn = '1B' and TZEROn = -128.  The calls to fits\_write\_col
 then write the arrays of unsigned integer values to the columns.
 
 
-\section{Dealing with Character Strings}
+\section{Dealing with Character Strings \label{character-strings}}
 
 The character string values in a FITS header or in an ASCII column in a
 FITS table extension are generally padded out with non-significant
@@ -1129,6 +1129,17 @@ Similarly, when writing string values to a FITS file the
 CFITSIO routines expect to get a null-terminated string as input;
 CFITSIO will pad the string with blanks if necessary when writing it
 to the FITS file.
+
+The FITS standard does not require trailing spaces to be treated in
+this way, but it does allow a more seamless transition from the
+FORTRAN FITS world where trailing spaces are often treated as
+insignificant.  Users who wish the greatest fidelity when transferring
+strings can use the \verb+_byt+ variants of column readers and writers
+(functions fits\_\{read,write\}\_col\_byt).  These routines will
+transfer the raw fixed-length vectors of character bytes of the
+column, including any trailing blanks of course. The \verb+_byt+
+variants make no attempt to null-terminate any elements.  A NULL
+string would be indicated by its first character being a NUL byte.
 
 When calling CFITSIO routines that return a character string it is
 vital that the size of the char array be large enough to hold the
@@ -2998,7 +3009,7 @@ efficient block size.
     extension.  The output file must be open for writing; a new
     extension is created with the same table structure as the input.
     Optionally, a range of nrows may be copied starting from firstrow,
-    similar to fits_copy_rows(). The value nrows may be 0.  Note that
+    similar to fits\_copy\_rows(). The value nrows may be 0.  Note that
     the first row in a table is at row = 1.
    \label{ffcpht}
 \end{description}
@@ -3358,14 +3369,20 @@ reading and writing routines where TSTRING corresponds to a C 'char*'
 data type, i.e., a single pointer to an array of characters.  When
 reading strings from a table, the char arrays obviously must have been
 allocated long enough to hold the whole FITS table string.
+See section \ref{character-strings}
+(``Dealing with Character Strings'') for more information.
+
+For complex and double complex data types, \verb+nelements+ is the number
+of numerical pairs; the number of floats or doubles stored by
+\+array+ must be \verb+2*nelements+.
 
 Numerical data values are automatically scaled by the TSCALn and TZEROn
 keyword values (if they exist).
 
-In the case of binary tables with vector elements, the 'felem'
+In the case of binary tables with vector elements, the \verb+firstelem+
 parameter defines the starting element (beginning with 1, not 0) within
 the cell (a cell is defined as the intersection of a row and a column
-and may contain a single value or a vector of values).  The felem
+and may contain a single value or a vector of values).  The \verb+firstelem+
 parameter is ignored when dealing with ASCII tables. Similarly, in the
 case of binary tables the 'nelements' parameter specifies the total
 number of vector values to be read or written (continuing on subsequent
@@ -3411,13 +3428,17 @@ rows if required) and not the number of table cells.
 
 \begin{description}
 \item[2 ] Read elements from an ASCII or binary table column.  The data type
-    parameter specifies the data type of the `nulval' and `array'  pointers;
+    parameter specifies the data type of the `nulval' and `array'  pointers.
+    The caller is required to allocate the storage of \verb+array+ before calling.  
     Undefined array elements will be returned with a value = *nullval,
     (note that this parameter gives the address of the null value, not the
     null value itself) unless nulval = 0 or *nulval = 0, in which case
     no checking for undefined pixels will be performed.  The second
     routine is similar except that any undefined pixels will have the
     corresponding nullarray element set equal to TRUE (= 1).
+
+    Reading data as TSTRING values is different than for other data types
+    as described above.
 
     Any column, regardless of it's intrinsic data type, may be read as a
     string.  It should be noted however that reading a numeric column
@@ -7182,11 +7203,29 @@ parameters used in these routines.
 
 \begin{description}
 \item[1 ] Read elements from an ASCII or binary table column (in the CDU).  These
-    routines return the values of the table column array elements.  Undefined
+    routines return the values of the table column array elements.  The caller
+    is required to allocate the storage \verb+array+ before calling.  Undefined
     array elements will be returned with a value = nulval, unless nulval = 0
     (or = ' ' for ffgcvs) in which case no checking for undefined values will
     be performed. The anynul parameter is set to true if any of the returned
-   elements are undefined. \label{ffgcvx}
+    elements are undefined. 
+
+    For the \verb+_str+ (string) variant the number
+    of elements is the number of strings, and the caller must allocate storage
+    for both the array of pointers \verb+array+ and the character array data
+    itself (use \verb+fits_get_col_display_width+ or \verb+fits_get_coltype+ to 
+    determine the number of characters).  See section \ref{character-strings}
+    (``Dealing with Character Strings'') for more information.  Also, when
+    the \verb+_byt+ variant is used to read a column stored in the file as 
+    string data (TFORMn = 'nA'), the subroutine will read the character
+    bytes (instead of attempting to perform a numerical conversion as other
+    integer variants would do), with no attempt at null termination.
+
+    For the \verb+_cmp+ and \verb+_dblcmp+
+    (complex and double complex) variants, \verb+nelements+ is the number
+    of numerical pairs; the number of floats or doubles that must be 
+    pre-allocated is \verb+2*nelements+.
+\label{ffgcvx}
 \end{description}
 
 \begin{verbatim}
@@ -7545,8 +7584,14 @@ components, if present, must be given in that order, but the colFilter,
 rowFilter, and binSpec specifiers may follow in any order.  Regardless
 of the order, however, the colFilter specifier, if present, will be
 processed first by CFITSIO, followed by the rowFilter specifier, and
-finally by the binSpec specifier.
+finally by the binSpec specifier.  
 
+Multiple colFilter or rowFilter specifications may appear as separated
+bracketed expressions, in any order.  Multiple colFilter or rowFilter
+expressions are treated internally as a single effective expression,
+with order of operations determined from left to right.  CFITSIO does
+not support the @filename.txt complex syntax option if multiple
+expressions are also used.
 
 \section{Filetype}
 
@@ -8370,6 +8415,7 @@ The column/keyword filter can be used to perform the following
 operations.  More than one operation may be specified by separating
 them with commas or semi-colons.
 
+
 \begin{itemize}
 
 \item
@@ -8473,6 +8519,21 @@ still be separated by commas or semi-colons.   Any lines in the external text fi
 that begin with 2 slash characters ('//') will be ignored and may be
 used to add comments into the file.
 
+When using column filtering to open a file ``on the fly,'' it is permitted
+to use multiple column filtering expressions.  For example, the
+syntax
+\begin{verbatim}
+  filename.fits[col *][col -Y][col Z=X+1]
+\end{verbatim}
+would be treated as equivalent to joining the expressions with semicolons, 
+or
+\begin{verbatim}
+  filename.fits[col *; -Y;col Z=X+1]
+\end{verbatim}
+Please note that if multiple column filtering expressions are used, it is
+not permitted to also use the \verb+[col @filename.txt]+ syntax in any
+of the individual expressions.
+
 It is possible to use wildcard syntax to delete either keywords or
 columns that match a pattern.  Recall that to delete either a keyword
 or a column, precede its name with a \verb+'-'+ character.
@@ -8497,8 +8558,8 @@ in the same CHDU match the pattern, they will not be deleted.
 To delete {\it zero or more} keywords that match the pattern, add a
 trailing \verb|'+'|.
 \begin{verbatim}
-  -VEL*;        # remove all columns (or keywords) beginning with VEL
-  -VEL_?;       # remove all columns (or keyword) VEL_? where ? is any character
+  -VEL*+;       # remove all columns (or keywords) beginning with VEL
+  -VEL_?+;      # remove all columns (or keyword) VEL_? where ? is any character
   -#DEC_*+;     # remove all keywords beginning with DEC_
   -#TUNIT#+;    # remove all keywords TUNIT ending w. number
 \end{verbatim}
@@ -8601,6 +8662,21 @@ HDUs in the input file will be copied into the temporary file).
     absolute row number, only a relative offset.  Rows that fall outside
     the table will be treated as undefined, or NULLs.
 
+    When using row filtering to open a file ``on the fly,'' it is permitted
+    to use multiple row filtering expressions.  For example, the expression
+\begin{verbatim}
+  filename.fits[#ROW > 5][X.gt.7]
+\end{verbatim}
+would be treated as equivalent to joining the expressions with logical ``and''
+like this,
+\begin{verbatim}
+  filename.fits[(#ROW > 5)&&(X.gt.7)]
+\end{verbatim}
+Please note that if multiple row filtering expressions are used, it is
+not permitted to also use the \verb+[@filename.txt]+ syntax in any
+of the individual expressions.
+    
+
 %% <!-- IMPORTANT NOTE IMPORTANT NOTE IMPORTANT NOTE -->
 %% <!-- If you edit this file then you must also edit 
 %%      the following other locations where calculator 
@@ -8608,6 +8684,8 @@ HDUs in the input file will be copied into the temporary file).
 %%         heacore/cfitsio/docs/cfitsio.tex
 %%         heacore/cfitsio/docs/fitsio.tex
 %%         heatools/help/calc_express.html
+%%         heatools/help/rowfilter.html
+%%         heatools/help/colfilter.html
 %%         heatools/ftcalc/ftcalc.html
 %%         heatools/ftselect/ftselect.html
 %%         ftools/futils/tasks/fselect/fselect.hlp
@@ -8775,12 +8853,15 @@ usage. Also, the integer to real casts values to double precision:
 \begin{verbatim}
          "a null value?"              ISNULL(x)
          "define a value for null"    DEFNULL(x,y)
+         "declare certain value null" SETNULL(x,y)
 \end{verbatim}
-    The former
-    returns a boolean value of TRUE if the  argument  x  is  NULL.   The
-    later  "defines"  a  value  to  be  substituted  for NULL values; it
+    ISNULL(x)
+    returns a boolean value of TRUE if the  argument  x  is  NULL. DEFNULL(x,y)
+    "defines"  a  value  to  be  substituted  for NULL values; it
     returns the value of x if x is not NULL, otherwise  it  returns  the
-    value of y.
+    value of y.  SETNULL(x,y) allows NULL values to be inserted into
+    a variable; if x==y, a NULL value is returned; otherwise y is returned
+    (x and y must be numerical, and x must be a scalar).
 
 \subsection{Bit Masks}
 
@@ -8949,20 +9030,26 @@ usage. Also, the integer to real casts values to double precision:
               COUNT = COUNT{-1} + 1;   # BAD - do not use
 \end{verbatim}
     will not produce an increasing counter.  Such recursive
-    calculations are often not possible with the calculator syntax.   
+    calculations are often not possible with the calculator syntax.  
+    However, for cases where the user wishes a row counter, the special 
+    variable \verb+#ROW+ can be utilized.
 
-\subsection{Good Time Interval Filtering}
+\subsection{Good Time Interval Filtering and Calculation}
 
-    A common filtering method involves selecting rows which have a time
-    value which lies within what is called a Good Time Interval or GTI.
-    The time intervals are defined in a separate FITS table extension
-    which contains 2 columns giving the start and stop time of each
-    good interval.  The filtering operation accepts only those rows of
-    the input table which have an associated time which falls within
-    one of the time intervals defined in the GTI extension. A high
-    level function, gtifilter(a,b,c,d), is available which evaluates
-    each row of the input table  and returns TRUE  or FALSE depending
-    whether the row is inside or outside the  good time interval.  The
+    There are two functions for filtering and calculating based
+    on Good Time Intervals, or GTIs.  GTIs are commonly used to
+    express fragmented time ranges that are not easy to express with a
+    single start and stop time.  The time intervals are defined in a
+    FITS table extension which contains 2 columns giving the
+    start and stop time of each good interval.
+
+    A common filtering method involves selecting rows which have a
+    time value which lies within any GTI.  The gtifilter() filtering
+    operation accepts only those rows of the input table which have an
+    associated time which falls within one of the time intervals
+    defined in a separate GTI extension.  gtifilter(a,b,c,d) evaluates
+    each row of the input table and returns TRUE or FALSE depending
+    whether the row is inside or outside the good time interval.  The
     syntax is
 
 \begin{verbatim}
@@ -9005,6 +9092,56 @@ usage. Also, the integer to real casts values to double precision:
     or  two  parameters  are  specified.   The  function   automatically
     searches   for   TIMEZERO/I/F   keywords  in  the  current  and  GTI
     extensions, applying a relative time offset, if necessary.
+
+    A separate function, gtioverlap(a,b,c,d,e), computes the overlap
+    between a user-requested time range and the entries in a GTI.  The
+    cases of no overlap, partial overlap, or overlap of many GTIs
+    within the user requested range are handled.  gtioverlap() is very
+    useful for calculating exposure times and fractional exposures of
+    individual time bins, say for a light curve.  The syntax of
+    gtioverlap() is
+
+\begin{verbatim}
+      gtioverlap( "gtifile" , startExpr, stopExpr [, "STARTCOL", "STOPCOL" ] )
+    or
+      gtioverlap( 'gtifile' , startExpr, stopExpr [, 'STARTCOL', 'STOPCOL' ] )
+\end{verbatim}
+
+    The requirements for specifying the gtifile are the same as for
+    gtifilter() as described above.  Unlike gtifilter(), the startExpr
+    and stopExpr are not optional.  startExpr provides a start of the
+    user requested time interval.  startExpr is typically TIME, but
+    can be any valid expression.  Likewise, stopExpr provides the stop
+    of the user requested time interval, and can be an expression.
+    For example, for a light curve with a TIME column and time bin
+    size of 1.0 seconds, the expression
+
+\begin{verbatim}
+      gtioverlap('gtifile',TIME,TIME+1.0)
+\end{verbatim}
+
+    would calculate the amount of overlap exposure time between each
+    one second time bin and the GTI in 'gtifile'.  In this case the
+    time bin is assumed to begin at the time specified by TIME and end
+    1 second later.  Neither startExpr nor stopExpr are required to be
+    constant, and a light curve is not required to have a constant bin
+    size.  For tables, the overlap is calculated for each entry in the
+    table.
+
+    It is also possible to calculate a single overlap value, which
+    would typically be placed in a keyword.  For example, a way to to
+    compute the total overlap exposure of a file whose TIME column is
+    bounded by the keywords TSTART and TSTOP, overlapping with the
+    specified GTI, would be
+
+\begin{verbatim}
+      #EXPOSURE = gtioverlap('gtifile',#TSTART,#TSTOP)
+\end{verbatim}
+
+    The \verb+#EXPOSURE+ syntax with a leading \+#+ ensures that the 
+    requested values are treated as keywords.  Otherwise, a column
+    named EXPOSURE will be created with the (constant) exposure value
+    in each entry.  
 
 
 \subsection{Spatial Region Filtering}

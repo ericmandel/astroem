@@ -14,8 +14,9 @@ AC_CANONICAL_TARGET([])
 #--------------------------------------------------------------------
 # CFITSIO Version Numbers:
 #--------------------------------------------------------------------
-AC_SUBST(CFITSIO_MAJOR,3)
-AC_SUBST(CFITSIO_MINOR,48)
+AC_SUBST(CFITSIO_MAJOR,4)
+AC_SUBST(CFITSIO_MINOR,0)
+AC_SUBST(CFITSIO_MICRO,0)
 # Increment soname each time the interface changes:
 AC_SUBST(CFITSIO_SONAME,9)
 
@@ -142,6 +143,11 @@ case $host in
 	ARCH="linux"
 	EXT="lnx"
 	;;
+    *haiku*)
+        # Haiku can be arm, i386, or x86_64
+        ARCH=`uname -p`
+        EXT="haiku"
+        ;;
     *hpux*)
 	ARCH="hp"
 	EXT="hpu"
@@ -301,6 +307,11 @@ case $host in
         AC_DEFINE(_LARGEFILE_SOURCE)
         AC_DEFINE(_FILE_OFFSET_BITS,64)
 	;;
+    *haiku*)
+        # For large file support:
+        AC_DEFINE(_LARGEFILE_SOURCE)
+        AC_DEFINE(_FILE_OFFSET_BITS,64)
+        ;;
     *hpux*)
 	if test "x$CFORTRANFLAGS" = x ; then
 		CFORTRANFLAGS="-Dappendus"
@@ -401,20 +412,25 @@ case $EXT in
   darwin)
     changequote(,)
     SHLIB_SUFFIX=".dylib"
-    CFITSIO_SHLIB="lib\${PACKAGE}.\${CFITSIO_SONAME}.\${CFITSIO_MAJOR}.\${CFITSIO_MINOR}\${SHLIB_SUFFIX}"
+    CFITSIO_SHLIB="lib\${PACKAGE}.\${CFITSIO_SONAME}.\${CFITSIO_MAJOR}.\${CFITSIO_MINOR}.\${CFITSIO_MICRO}\${SHLIB_SUFFIX}"
     CFITSIO_SHLIB_SONAME="lib\${PACKAGE}.\${CFITSIO_SONAME}\${SHLIB_SUFFIX}"
     case $host in
         *darwin[56789]*)
-            SHLIB_LD="$CC -dynamiclib -install_name lib\${PACKAGE}.\${CFITSIO_SONAME}\${SHLIB_SUFFIX} -compatibility_version \${CFITSIO_SONAME} -current_version \${CFITSIO_SONAME}.\${CFITSIO_MAJOR}.\${CFITSIO_MINOR}"
+            SHLIB_LD="$CC -dynamiclib -install_name lib\${PACKAGE}.\${CFITSIO_SONAME}\${SHLIB_SUFFIX} -compatibility_version \${CFITSIO_SONAME} -current_version \${CFITSIO_SONAME}.\${CFITSIO_MAJOR}.\${CFITSIO_MINOR}.\${CFITSIO_MICRO}"
             ;;
         *)
             # Build 'Universal' binaries (i386 & x86_64 architectures) and
             # use rpath token on Darwin 10.x or newer:
-            SHLIB_LD="$CC -dynamiclib $C_UNIV_SWITCH -headerpad_max_install_names -install_name @rpath/lib\${PACKAGE}.\${CFITSIO_SONAME}\${SHLIB_SUFFIX} -compatibility_version \${CFITSIO_SONAME} -current_version \${CFITSIO_SONAME}.\${CFITSIO_MAJOR}.\${CFITSIO_MINOR}"
+            SHLIB_LD="$CC -dynamiclib $C_UNIV_SWITCH -headerpad_max_install_names -install_name @rpath/lib\${PACKAGE}.\${CFITSIO_SONAME}\${SHLIB_SUFFIX} -compatibility_version \${CFITSIO_SONAME} -current_version \${CFITSIO_SONAME}.\${CFITSIO_MAJOR}.\${CFITSIO_MINOR}.\${CFITSIO_MICRO}"
             ;;
     esac
     changequote([,])
     lhea_shlib_cflags="-fPIC -fno-common"
+    ;;
+  haiku)
+    SHLIB_LD=":"
+    CFITSIO_SHLIB="lib\${PACKAGE}\${SHLIB_SUFFIX}.\${CFITSIO_SONAME}.\${CFITSIO_MAJOR}.\${CFITSIO_MINOR}.\${CFITSIO_MICRO}"
+    CFITSIO_SHLIB_SONAME="lib\${PACKAGE}\${SHLIB_SUFFIX}.\${CFITSIO_SONAME}"
     ;;
   hpu)
     SHLIB_LD="ld -b" 
@@ -422,7 +438,7 @@ case $EXT in
     ;;
   lnx)
     SHLIB_LD=":"
-    CFITSIO_SHLIB="lib\${PACKAGE}\${SHLIB_SUFFIX}.\${CFITSIO_SONAME}.\${CFITSIO_MAJOR}.\${CFITSIO_MINOR}"
+    CFITSIO_SHLIB="lib\${PACKAGE}\${SHLIB_SUFFIX}.\${CFITSIO_SONAME}.\${CFITSIO_MAJOR}.\${CFITSIO_MINOR}.\${CFITSIO_MICRO}"
     CFITSIO_SHLIB_SONAME="lib\${PACKAGE}\${SHLIB_SUFFIX}.\${CFITSIO_SONAME}"
     ;;
   osf)
@@ -491,6 +507,9 @@ if test "x$ADD_CURL" = xyes; then
   fi
 fi
 AC_SUBST(LIBS_CURL)
+
+# ZLIB (required):
+AC_CHECK_LIB([z], [inflateEnd], [],[AC_MSG_ERROR(Unable to locate zlib compression library)])
 
 # GSIFTP flags:
 if test "x$GSIFTP_PATH" != x -a "x$GSIFTP_FLAVOUR" != x; then
@@ -632,8 +651,8 @@ AC_CHECK_FUNC(fmemopen, AC_DEFINE(HAVE_FMEMOPEN), [AC_MSG_WARN(Disabling support
 # ==================== END OF SHARED MEMORY DRIVER SECTION ================
 # ================= test for the unix networking functions ================
 
-AC_SEARCH_LIBS([gethostbyname], [nsl], cfitsio_have_nsl=1, cfitsio_have_nsl=0)
-AC_SEARCH_LIBS([connect], [socket], cfitsio_have_socket=1,
+AC_SEARCH_LIBS([gethostbyname], [nsl network], cfitsio_have_nsl=1, cfitsio_have_nsl=0)
+AC_SEARCH_LIBS([connect], [socket network], cfitsio_have_socket=1,
                cfitsio_have_socket=0, [-lnsl])
 
 if test "$cfitsio_have_nsl" = 1 -a "$cfitsio_have_socket" = 1; then

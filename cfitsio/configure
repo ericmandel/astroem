@@ -652,6 +652,7 @@ LDFLAGS
 CFLAGS
 CC
 CFITSIO_SONAME
+CFITSIO_MICRO
 CFITSIO_MINOR
 CFITSIO_MAJOR
 target_os
@@ -2288,9 +2289,11 @@ test -n "$target_alias" &&
 #--------------------------------------------------------------------
 # CFITSIO Version Numbers:
 #--------------------------------------------------------------------
-CFITSIO_MAJOR=3
+CFITSIO_MAJOR=4
 
-CFITSIO_MINOR=48
+CFITSIO_MINOR=0
+
+CFITSIO_MICRO=0
 
 # Increment soname each time the interface changes:
 CFITSIO_SONAME=9
@@ -3677,6 +3680,11 @@ case $host in
 	ARCH="linux"
 	EXT="lnx"
 	;;
+    *haiku*)
+        # Haiku can be arm, i386, or x86_64
+        ARCH=`uname -p`
+        EXT="haiku"
+        ;;
     *hpux*)
 	ARCH="hp"
 	EXT="hpu"
@@ -4643,6 +4651,13 @@ case $host in
         $as_echo "#define _FILE_OFFSET_BITS 64" >>confdefs.h
 
 	;;
+    *haiku*)
+        # For large file support:
+        $as_echo "#define _LARGEFILE_SOURCE 1" >>confdefs.h
+
+        $as_echo "#define _FILE_OFFSET_BITS 64" >>confdefs.h
+
+        ;;
     *hpux*)
 	if test "x$CFORTRANFLAGS" = x ; then
 		CFORTRANFLAGS="-Dappendus"
@@ -4812,20 +4827,25 @@ case $EXT in
   darwin)
 
     SHLIB_SUFFIX=".dylib"
-    CFITSIO_SHLIB="lib\${PACKAGE}.\${CFITSIO_SONAME}.\${CFITSIO_MAJOR}.\${CFITSIO_MINOR}\${SHLIB_SUFFIX}"
+    CFITSIO_SHLIB="lib\${PACKAGE}.\${CFITSIO_SONAME}.\${CFITSIO_MAJOR}.\${CFITSIO_MINOR}.\${CFITSIO_MICRO}\${SHLIB_SUFFIX}"
     CFITSIO_SHLIB_SONAME="lib\${PACKAGE}.\${CFITSIO_SONAME}\${SHLIB_SUFFIX}"
     case $host in
         *darwin[56789]*)
-            SHLIB_LD="$CC -dynamiclib -install_name lib\${PACKAGE}.\${CFITSIO_SONAME}\${SHLIB_SUFFIX} -compatibility_version \${CFITSIO_SONAME} -current_version \${CFITSIO_SONAME}.\${CFITSIO_MAJOR}.\${CFITSIO_MINOR}"
+            SHLIB_LD="$CC -dynamiclib -install_name lib\${PACKAGE}.\${CFITSIO_SONAME}\${SHLIB_SUFFIX} -compatibility_version \${CFITSIO_SONAME} -current_version \${CFITSIO_SONAME}.\${CFITSIO_MAJOR}.\${CFITSIO_MINOR}.\${CFITSIO_MICRO}"
             ;;
         *)
             # Build 'Universal' binaries (i386 & x86_64 architectures) and
             # use rpath token on Darwin 10.x or newer:
-            SHLIB_LD="$CC -dynamiclib $C_UNIV_SWITCH -headerpad_max_install_names -install_name @rpath/lib\${PACKAGE}.\${CFITSIO_SONAME}\${SHLIB_SUFFIX} -compatibility_version \${CFITSIO_SONAME} -current_version \${CFITSIO_SONAME}.\${CFITSIO_MAJOR}.\${CFITSIO_MINOR}"
+            SHLIB_LD="$CC -dynamiclib $C_UNIV_SWITCH -headerpad_max_install_names -install_name @rpath/lib\${PACKAGE}.\${CFITSIO_SONAME}\${SHLIB_SUFFIX} -compatibility_version \${CFITSIO_SONAME} -current_version \${CFITSIO_SONAME}.\${CFITSIO_MAJOR}.\${CFITSIO_MINOR}.\${CFITSIO_MICRO}"
             ;;
     esac
 
     lhea_shlib_cflags="-fPIC -fno-common"
+    ;;
+  haiku)
+    SHLIB_LD=":"
+    CFITSIO_SHLIB="lib\${PACKAGE}\${SHLIB_SUFFIX}.\${CFITSIO_SONAME}.\${CFITSIO_MAJOR}.\${CFITSIO_MINOR}.\${CFITSIO_MICRO}"
+    CFITSIO_SHLIB_SONAME="lib\${PACKAGE}\${SHLIB_SUFFIX}.\${CFITSIO_SONAME}"
     ;;
   hpu)
     SHLIB_LD="ld -b"
@@ -4833,7 +4853,7 @@ case $EXT in
     ;;
   lnx)
     SHLIB_LD=":"
-    CFITSIO_SHLIB="lib\${PACKAGE}\${SHLIB_SUFFIX}.\${CFITSIO_SONAME}.\${CFITSIO_MAJOR}.\${CFITSIO_MINOR}"
+    CFITSIO_SHLIB="lib\${PACKAGE}\${SHLIB_SUFFIX}.\${CFITSIO_SONAME}.\${CFITSIO_MAJOR}.\${CFITSIO_MINOR}.\${CFITSIO_MICRO}"
     CFITSIO_SHLIB_SONAME="lib\${PACKAGE}\${SHLIB_SUFFIX}.\${CFITSIO_SONAME}"
     ;;
   osf)
@@ -4939,6 +4959,55 @@ $as_echo "$as_me: WARNING: curl-config not found. Disabling curl support." >&2;}
   #       [AC_MSG_WARN(Not building curl support for CFITSIO)])
   #  AC_CHECK_HEADER(curl.h,[])
   fi
+fi
+
+
+# ZLIB (required):
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for inflateEnd in -lz" >&5
+$as_echo_n "checking for inflateEnd in -lz... " >&6; }
+if ${ac_cv_lib_z_inflateEnd+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lz  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char inflateEnd ();
+int
+main ()
+{
+return inflateEnd ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_z_inflateEnd=yes
+else
+  ac_cv_lib_z_inflateEnd=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_z_inflateEnd" >&5
+$as_echo "$ac_cv_lib_z_inflateEnd" >&6; }
+if test "x$ac_cv_lib_z_inflateEnd" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBZ 1
+_ACEOF
+
+  LIBS="-lz $LIBS"
+
+else
+  as_fn_error $? "Unable to locate zlib compression library" "$LINENO" 5
 fi
 
 
@@ -5270,7 +5339,7 @@ return gethostbyname ();
   return 0;
 }
 _ACEOF
-for ac_lib in '' nsl; do
+for ac_lib in '' nsl network; do
   if test -z "$ac_lib"; then
     ac_res="none required"
   else
@@ -5328,7 +5397,7 @@ return connect ();
   return 0;
 }
 _ACEOF
-for ac_lib in '' socket; do
+for ac_lib in '' socket network; do
   if test -z "$ac_lib"; then
     ac_res="none required"
   else
