@@ -10,8 +10,13 @@ EMFLAGS		= -O3
 # needed for compilations that don't use emconfigure or done use macros
 EM_CFLAGS	= CC=$(EMCC) CFLAGS=$(EMFLAGS) ARCHIVE=emar RANLIB=emranlib AR=emar ARFLAGS=cruv
 
+# flags to pass when we rebuild the emsripten cache
+EMCACHE_FLAGS	= -s USE_ZLIB=1 -s USE_BZIP2=1
+
 # libraries that we build, along with configuration params as needed:
 BZIP2 		= ./bzip2
+
+EMCACHE		= ./emcache
 
 CFITSIO 	= ./cfitsio
 CFITSIO_CFLAGS	= $(EMFLAGS) -fno-common -D__x86_64__
@@ -35,6 +40,17 @@ guard:		FORCE
 
 # build all libraries
 all:		cfitsio util wcs em regions
+
+# clear and then remake the emscripten system cache
+emcache:	FORCE
+		@(CDIR=`pwd`; cd $(EMCACHE);       		\
+		  emcc --version; 		   		\
+		  echo "clearing emscripten system cache"; 	\
+		  emcc --clear-cache; 				\
+		  echo "rebuilding emscripten system cache"; 	\
+		  emcc $(EMFLAGS) $(EMCACHE_FLAGS) hello.c; 	\
+		  echo "cleaning up emscripten files"; 		\
+		  rm -rf a.out.js  a.out.wasm)
 
 cfitsio:	FORCE
 		@(CDIR=`pwd`; cd $(CFITSIO);       \
@@ -85,7 +101,7 @@ zlib:		FORCE
 
 clean:		FORCE
 		@(rm -rf *.o *~ a.out* foo* *.map \#*         \
-		*/*.wasm astroem*.js astroem*.mem astroem.bc; \
+		*/*~ */*.wasm astroem*.js astroem*.mem astroem.bc; \
 		(cd $(EM) && make clean 2>&1 >/dev/null;);    \
 		(cd $(CFITSIO) && rm -rf config.log a.out* && test -r Makefile && make clean distclean 2>&1 >/dev/null;); \
 		(cd $(REGIONS) && make clean 2>&1 >/dev/null;);   \
