@@ -7,7 +7,7 @@ EMCC		= emcc
 # production
 EMFLAGS		= -O3
 
-# needed for compilations that don't use emconfigure or done use macros
+# needed for compilations that don't use emconfigure or don't use macros
 EM_CFLAGS	= CC=$(EMCC) CFLAGS=$(EMFLAGS) ARCHIVE=emar RANLIB=emranlib AR=emar ARFLAGS=cruv
 
 # flags to pass when we rebuild the emsripten cache
