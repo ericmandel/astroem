@@ -56,7 +56,7 @@ cfitsio:	FORCE
 		@(CDIR=`pwd`; cd $(CFITSIO);       \
 		FC=none LDFLAGS="-s USE_ZLIB=1" emconfigure ./configure --disable-curl; \
 		sed 's/ \-DCFITSIO_HAVE_CURL=1//;s/ \-DHAVE_NET_SERVICES=1//' < Makefile > nMakefile && mv nMakefile Makefile;     \
-		emmake make ZLIB_SOURCES="" CFLAGS="$(CFITSIO_CFLAGS)" clean libcfitsio.a "FITSIO_SRC=";      \
+		emmake make CFLAGS="$(CFITSIO_CFLAGS)" clean libcfitsio.a "FITSIO_SRC=";      \
 		cp -p libcfitsio.a $${CDIR}/lib;   \
 	        cp -p *.h $${CDIR}/include;)
 
