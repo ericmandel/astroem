@@ -1,6 +1,5 @@
 *~
 *.o
-*.so
 *.bak
 *.pyc
 *-orig

@@ -8,7 +8,11 @@ EMCC		= emcc
 EMFLAGS		= -O3
 
 # needed for compilations that don't use emconfigure or don't use macros
-EM_CFLAGS	= CC=$(EMCC) CFLAGS=$(EMFLAGS) ARCHIVE=emar RANLIB=emranlib AR=emar ARFLAGS=cruv
+EM_CFLAGS	= CC=$(EMCC) CFLAGS="$(EMFLAGS)" ARCHIVE=emar RANLIB=emranlib AR=emar ARFLAGS=cruv
+# same but builds shared library
+EM_SHARED	= -s MAIN_MODULE=2
+EM_SHARED_EXT	= _shared.a
+EM_CFLAGS_SO	= CC=$(EMCC) CFLAGS="$(EMFLAGS) $(EM_SHARED)" ARCHIVE=emar RANLIB=emranlib AR=emar ARFLAGS=cruv
 
 # flags to pass when we rebuild the emsripten cache
 EMCACHE_FLAGS	= -s USE_ZLIB=1 -s USE_BZIP2=1
@@ -56,48 +60,62 @@ cfitsio:	FORCE
 		@(CDIR=`pwd`; cd $(CFITSIO);       \
 		FC=none LDFLAGS="-s USE_ZLIB=1" emconfigure ./configure --disable-curl; \
 		sed 's/ \-DCFITSIO_HAVE_CURL=1//;s/ \-DHAVE_NET_SERVICES=1//' < Makefile > nMakefile && mv nMakefile Makefile;     \
-		emmake make CFLAGS="$(CFITSIO_CFLAGS)" clean libcfitsio.a "FITSIO_SRC=";      \
+		emmake make CFLAGS="$(CFITSIO_CFLAGS)" clean libcfitsio.a; \
 		cp -p libcfitsio.a $${CDIR}/lib;   \
-	        cp -p *.h $${CDIR}/include;)
+		emmake make CFLAGS="$(CFITSIO_CFLAGS) $(EM_SHARED)" clean libcfitsio.a; \
+		cp -p libcfitsio.a $${CDIR}/lib/libcfitsio$(EM_SHARED_EXT);   \
+	        cp -p *.h $${CDIR}/include)
 
 em:		FORCE
 		@(CDIR=`pwd`; cd $(EM);            \
 		emmake make $(EM_CFLAGS) libem.a;  \
 		cp -p libem.a $${CDIR}/lib;        \
-	        cp -p *.h $${CDIR}/include;)
+		emmake make $(EM_CFLAGS_SO) clean libem.a;  \
+		cp -p libem.a $${CDIR}/lib/libem$(EM_SHARED_EXT);  \
+	        cp -p *.h $${CDIR}/include)
 
 regions:	FORCE
 		@(CDIR=`pwd`; cd $(REGIONS);        \
 		emconfigure ./configure --with-cfitsio=..; \
 		emmake make clean CFLAGS="$(REGIONS_CFLAGS)" emlib; \
 		cp -p libregions.a $${CDIR}/lib;    \
-	        cp -p $(REGINCL) $${CDIR}/include;)
+		emmake make clean CFLAGS="$(REGIONS_CFLAGS) $(EM_SHARED)" emlib; \
+		cp -p libregions.a $${CDIR}/lib/libregions$(EM_SHARED_EXT);    \
+	        cp -p $(REGINCL) $${CDIR}/include)
 
 util:		FORCE
 		@(CDIR=`pwd`; cd $(UTIL);          \
 		emconfigure ./configure;           \
 		emmake make clean CFLAGS="$(UTIL_CFLAGS)" all;             \
 		cp -p libutil.a $${CDIR}/lib;      \
-	        cp -p *.h $${CDIR}/include;)
+		emmake make clean CFLAGS="$(UTIL_CFLAGS) $(EM_SHARED)" all; \
+		cp -p libutil.a $${CDIR}/lib/libutil$(EM_SHARED_EXT);      \
+	        cp -p *.h $${CDIR}/include)
 
 wcs:		FORCE
 		@(CDIR=`pwd`; cd $(WCS);           \
 		emmake make $(EM_CFLAGS) libwcs.a; \
 		cp -p libwcs.a $${CDIR}/lib;       \
-	        cp -p *.h $${CDIR}/include;)
+		emmake make $(EM_CFLAGS_SO) clean libwcs.a;  \
+		cp -p libwcs.a $${CDIR}/lib/libwcs$(EM_SHARED_EXT); \
+	        cp -p *.h $${CDIR}/include)
 
 bzip2:		FORCE
 		@(CDIR=`pwd`; cd $(BZIP2);         \
 		emmake make $(EM_CFLAGS) libbz2.a; \
 		cp -p libbz2.a $${CDIR}/lib;       \
-	        cp -p *.h $${CDIR}/include;)
+		emmake make $(EM_CFLAGS_SO) clean libbz2.a;  \
+		cp -p libbz2.a $${CDIR}/lib/libbz2$(EM_SHARED_EXT); \
+	        cp -p *.h $${CDIR}/include)
 
 zlib:		FORCE
 		@(CDIR=`pwd`; cd $(ZLIB);          \
 		emconfigure ./configure --static;  \
 		emmake make $(EM_CFLAGS) libz.a;   \
 		cp -p libz.a $${CDIR}/lib;         \
-	        cp -p *.h $${CDIR}/include;)
+		emmake make $(EM_CFLAGS_SO) clean libz.a; \
+		cp -p libz.a $${CDIR}/lib/libz$(EM_SHARED_EXT);  \
+	        cp -p *.h $${CDIR}/include)
 
 clean:		FORCE
 		@(rm -rf *.o *~ a.out* foo* *.map \#*         \
@@ -108,7 +126,6 @@ clean:		FORCE
 		(cd $(UTIL) && make clean 2>&1 >/dev/null;);   \
 		(cd $(WCS) && make clean 2>&1 >/dev/null;);    \
 		(cd $(BZIP2) && make clean 2>&1 >/dev/null;); \
-		(cd $(ZLIB) && rm -rf *.js && make distclean 2>&1 >/dev/null;); \
-		)
+		(cd $(ZLIB) && rm -rf *.js && make distclean 2>&1 >/dev/null;);)
 
 FORCE:
