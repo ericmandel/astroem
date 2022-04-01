@@ -13,7 +13,7 @@ Current libraries:
   - bzip2 (http://www.bzip.org/)
   - regions (https://github.com/ericmandel/regions)
 
-Current emcc compiler: 2.0.16
+Current emcc compiler: 3.1.8
 
 An emscripten-enabled project such as JS9 can copy the contents of the
 lib and include sub-directories into their own work space and then
@@ -27,10 +27,16 @@ For an example of the use of these particular libraries, see the
 in the astroem sub-directory of https://github.com/ericmandel/js9.
 
 The libraries are compiled using the -O3 level of optimization (see
-the EMFLAGS variable in the top-level Makefile).  Emscripten wants you
-to use the same optimization flags throughout the project, so if you
-use a different level of optimization, you probably want to change the
-EMFLAGS variable and rebuild the libraries by executing *make all*.
+the EMFLAGS variable in the top-level Makefile).
+
+The shared libraries are compiled using the -O3 level of optimization along
+with the -s MAIN_MODULE=2, so they can be linked into a main module when
+you are using main and side modules.
+
+Emscripten wants you to use the same optimization flags throughout the
+project, so if you use a different level of optimization, you probably
+want to change the EMFLAGS variable and rebuild the libraries by
+executing *make all*.
 
 astroem is distributed under the terms of The MIT License.
 
