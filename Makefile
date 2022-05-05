@@ -23,7 +23,7 @@ BZIP2 		= ./bzip2
 EMCACHE		= ./emcache
 
 CFITSIO 	= ./cfitsio
-CFITSIO_CFLAGS	= $(EMFLAGS) -fno-common -D__x86_64__
+CFITSIO_CFLAGS	= $(EMFLAGS) -D__x86_64__ -Wno-deprecated-non-prototype
 
 EM 		= ./em
 
@@ -94,6 +94,7 @@ util:		FORCE
 
 wcs:		FORCE
 		@(CDIR=`pwd`; cd $(WCS);           \
+		$(eval EMFLAGS += -Wno-deprecated-non-prototype) \
 		emmake make $(EM_CFLAGS) libwcs.a; \
 		cp -p libwcs.a $${CDIR}/lib;       \
 		emmake make $(EM_CFLAGS_SO) clean libwcs.a;  \
