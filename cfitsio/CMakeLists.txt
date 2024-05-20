@@ -21,7 +21,7 @@ PROJECT(CFITSIO
 
 # Define project version
 SET(${PROJECT_NAME}_MAJOR 4)
-SET(${PROJECT_NAME}_MINOR 1)
+SET(${PROJECT_NAME}_MINOR 4)
 SET(${PROJECT_NAME}_MICRO 0)
 SET(${PROJECT_NAME}_VERSION ${${PROJECT_NAME}_MAJOR}.${${PROJECT_NAME}_MINOR}.${${PROJECT_NAME}_MICRO})
 SET(LIB_NAME cfitsio)
@@ -51,7 +51,7 @@ OPTION(USE_PTHREADS "Thread-safe build (using pthreads)" OFF)
 
 OPTION(TESTS "Build test programs Testprog and cookbook" OFF)
 
-OPTION(UTILS "Build FPack, Funpack, and Fitscopy executables" OFF)
+OPTION(UTILS "Build FPack, Funpack, Fitscopy, and Fitsverify executables" OFF)
 
 OPTION(USE_SSE2 "Enable use of instructions in the SSE2 extended instruction set" OFF)
 
@@ -252,6 +252,15 @@ SET(SRC_FILES
 # Add libraries:
 #==============================================================================
 ADD_LIBRARY(${LIB_NAME} ${LIB_TYPE} ${H_FILES} ${SRC_FILES})
+# Add an alias definition to handle export namespace for
+# add_subdirectory():
+ADD_LIBRARY(${LIB_NAME}::${LIB_NAME} ALIAS ${LIB_NAME})
+
+TARGET_INCLUDE_DIRECTORIES(${LIB_NAME} PUBLIC
+    $<BUILD_INTERFACE:${CFITSIO_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+    $<INSTALL_INTERFACE:include>
+)
 # Math:
 TARGET_LINK_LIBRARIES(${LIB_NAME} ${M_LIB})
 # zlib:
@@ -280,12 +289,16 @@ IF (BZIP2_FOUND)
 ENDIF(BZIP2_FOUND)
 
 SET_TARGET_PROPERTIES(${LIB_NAME} PROPERTIES VERSION ${${PROJECT_NAME}_VERSION} SOVERSION ${${PROJECT_NAME}_MAJOR})
+
 include(GNUInstallDirs)
-install(TARGETS ${LIB_NAME}
+include(CMakePackageConfigHelpers)
+
+install(TARGETS ${LIB_NAME} EXPORT ${LIB_NAME}-targets
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
+install(EXPORT ${LIB_NAME}-targets DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cfitsio)
 install(FILES ${H_FILES} DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT Devel)
 
 #==============================================================================
@@ -295,14 +308,14 @@ IF (TESTS)
 
     ENABLE_TESTING()
 
-    ADD_EXECUTABLE(TestProg testprog.c)
+    ADD_EXECUTABLE(TestProg utilities/testprog.c)
     TARGET_LINK_LIBRARIES(TestProg ${LIB_NAME})
     ADD_TEST(TestProg TestProg)
     # Copy testprog.tpt to build directory to allow quick test
     # of ./TestProg (or .\Release\TestProg.exe in MSVC):
     FILE(COPY ${CMAKE_SOURCE_DIR}/testprog.tpt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
-    ADD_EXECUTABLE(cookbook cookbook.c)
+    ADD_EXECUTABLE(cookbook utilities/cookbook.c)
     TARGET_LINK_LIBRARIES(cookbook ${LIB_NAME})
     ADD_TEST(cookbook cookbook)
 
@@ -313,22 +326,29 @@ ENDIF(TESTS)
 #==============================================================================
 IF (UTILS)
 
-    ADD_EXECUTABLE(FPack fpack.c fpackutil.c)
+    ADD_EXECUTABLE(FPack utilities/fpack.c utilities/fpackutil.c)
     TARGET_LINK_LIBRARIES(FPack ${LIB_NAME})
 
-    ADD_EXECUTABLE(Funpack funpack.c fpackutil.c)
+    ADD_EXECUTABLE(Funpack utilities/funpack.c utilities/fpackutil.c)
     TARGET_LINK_LIBRARIES(Funpack ${LIB_NAME})
 
-    ADD_EXECUTABLE(Fitscopy fitscopy.c)
+    ADD_EXECUTABLE(Fitscopy utilities/fitscopy.c)
     TARGET_LINK_LIBRARIES(Fitscopy ${LIB_NAME})
+
+    ADD_EXECUTABLE(Fitsverify
+                  utilities/ftverify.c utilities/fvrf_data.c
+                  utilities/fvrf_file.c utilities/fvrf_head.c
+                  utilities/fvrf_key.c utilities/fvrf_misc.c)
+    TARGET_COMPILE_DEFINITIONS(Fitsverify PRIVATE -DSTANDALONE)
+    TARGET_LINK_LIBRARIES(Fitsverify ${LIB_NAME})
 
     # To expand the command line arguments in Windows, see:
     # http://msdn.microsoft.com/en-us/library/8bch7bkk.aspx
-    if(MSVC)
+    if(MSVC AND NOT CMAKE_SYSTEM_NAME MATCHES "WindowsStore")
       set_target_properties(FPack Funpack PROPERTIES LINK_FLAGS "setargv.obj")
     endif(MSVC)
 
-    install(TARGETS FPack Funpack Fitscopy RUNTIME DESTINATION bin)
+    install(TARGETS FPack Funpack Fitscopy Fitsverify RUNTIME DESTINATION bin)
 
 ENDIF(UTILS)
 
@@ -336,4 +356,9 @@ ENDIF(UTILS)
 # cfitsio.pc
 #==============================================================================
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cfitsio.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/cfitsio.pc @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/cfitsio-config.cmake @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-config-version.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/cfitsio-config-version.cmake @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cfitsio.pc DESTINATION lib/pkgconfig/)
+install(FILES ${CFITSIO_BINARY_DIR}/cfitsio-config.cmake
+              ${CFITSIO_BINARY_DIR}/cfitsio-config-version.cmake
+              DESTINATION lib/cfitsio-${CFITSIO_VERSION})
